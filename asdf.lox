@@ -1,0 +1,5 @@
+var message = "Hello World!";
+var num = 1234;
+
+// print out something
+print message;
