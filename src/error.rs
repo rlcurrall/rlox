@@ -3,8 +3,8 @@ use std::fmt::Display;
 
 #[derive(Debug, Clone)]
 pub(crate) struct Error {
-    line: i32,
-    offset: i32,
+    line: usize,
+    offset: usize,
     message: String,
 }
 
@@ -17,31 +17,48 @@ impl Display for Error {
     }
 }
 
-pub(crate) type Result<T> = CoreResult<T, RuntimeError>;
+pub type Result<T> = CoreResult<T, RuntimeError>;
 
-pub(crate) enum RuntimeError {
-    ParseError(Error),
-    OsError(std::io::Error),
+pub enum RuntimeError {
+    ScanError {
+        line: usize,
+        offset: usize,
+        message: String,
+    },
+    ParseError(String),
+    GeneralError(String),
 }
 
 impl RuntimeError {
-    pub(crate) fn parse(message: String, line: i32, offset: i32) -> Self {
-        Self::ParseError(Error {
+    pub(crate) fn parse_error(message: String) -> Self {
+        Self::ParseError(message)
+    }
+
+    pub(crate) fn scan_error(message: String, line: usize, offset: usize) -> Self {
+        Self::ScanError {
             message,
             line,
             offset,
-        })
+        }
+    }
+
+    pub(crate) fn general_error(message: &str) -> Self {
+        Self::GeneralError(message.into())
     }
 }
 
 impl From<std::io::Error> for RuntimeError {
     fn from(value: std::io::Error) -> Self {
-        RuntimeError::OsError(value)
+        RuntimeError::GeneralError(value.to_string())
     }
 }
 
 impl From<Error> for RuntimeError {
     fn from(value: Error) -> Self {
-        RuntimeError::ParseError(value)
+        RuntimeError::ScanError {
+            line: value.line,
+            offset: value.offset,
+            message: value.message,
+        }
     }
 }

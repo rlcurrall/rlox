@@ -1,35 +1,22 @@
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub(crate) struct Token {
-    pub token_type: TokenType,
+    pub value: TokenValue,
     pub lexeme: String,
-    pub literal: Option<TokenLiteral>,
-    pub line: i32,
+    pub line: usize,
 }
 
 impl Token {
-    pub fn new(
-        token_type: TokenType,
-        lexeme: String,
-        literal: Option<TokenLiteral>,
-        line: i32,
-    ) -> Self {
+    pub fn new(value: TokenValue, lexeme: String, line: usize) -> Self {
         Self {
-            token_type,
+            value,
             lexeme,
-            literal,
             line,
         }
     }
 }
 
-#[derive(Debug)]
-pub(crate) enum TokenLiteral {
-    Number(i64),
-    String(String),
-}
-
-#[derive(Debug)]
-pub(crate) enum TokenType {
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) enum TokenValue {
     // Single-character tokens.
     LeftParen,
     RightParen,
@@ -54,9 +41,9 @@ pub(crate) enum TokenType {
     LessEqual,
 
     // Literals.
-    Identifier,
-    String,
-    Number,
+    Identifier(String),
+    String(String),
+    Number(f64),
 
     // keywords.
     And,
