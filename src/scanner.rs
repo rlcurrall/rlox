@@ -73,6 +73,7 @@ impl Scanner {
             true => Err(RuntimeError::scan_error(
                 format!("Attempt to read source at invalid offset `{offset}``"),
                 self.line,
+                self.column,
                 self.position,
             )),
         }
@@ -152,8 +153,9 @@ impl Scanner {
                     self.scan_identifier()
                 } else {
                     Err(RuntimeError::scan_error(
-                        format!("Unexpected token: {character}"),
+                        format!("Unexpected token `{character}`"),
                         self.line,
+                        self.column,
                         self.position,
                     ))
                 }
@@ -168,7 +170,13 @@ impl Scanner {
 
         loop {
             self.advance();
-            if self.current() == '\n' || self.at_end() {
+
+            if self.at_end() {
+                return;
+            }
+
+            if self.current() == '\n' {
+                self.next_line();
                 return;
             }
         }
@@ -183,6 +191,7 @@ impl Scanner {
                 return Err(RuntimeError::scan_error(
                     "Unterminated string".into(),
                     self.line,
+                    self.column,
                     self.position,
                 ));
             }
@@ -209,6 +218,8 @@ impl Scanner {
     }
 
     fn scan_number(&mut self) -> Result<Option<Token>> {
+        let mut notation_std = true;
+        let mut decimal_allowed = true;
         let mut lexeme = String::from("");
         let current = self.current();
         lexeme.push(current);
@@ -219,7 +230,23 @@ impl Scanner {
             }
 
             if let Ok(char) = self.peek() {
-                if !char.is_digit(10) {
+                if char == '_' {
+                    self.advance();
+                    continue;
+                } else if char == '.' {
+                    if decimal_allowed {
+                        decimal_allowed = false;
+                    } else {
+                        break;
+                    }
+                } else if char == 'e' {
+                    if notation_std {
+                        notation_std = false;
+                        decimal_allowed = false;
+                    } else {
+                        break;
+                    }
+                } else if !char.is_digit(10) {
                     break;
                 }
 
@@ -232,6 +259,7 @@ impl Scanner {
             RuntimeError::scan_error(
                 format!("Could not parse number: `{lexeme}`"),
                 self.line,
+                self.column,
                 self.position,
             )
         })?;

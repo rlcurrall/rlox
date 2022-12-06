@@ -1,9 +1,12 @@
 use core::result::Result as CoreResult;
 use std::fmt::Display;
 
+use crate::token::Token;
+
 #[derive(Debug, Clone)]
 pub(crate) struct Error {
     line: usize,
+    column: usize,
     offset: usize,
     message: String,
 }
@@ -22,23 +25,22 @@ pub type Result<T> = CoreResult<T, RuntimeError>;
 pub enum RuntimeError {
     ScanError {
         line: usize,
+        column: usize,
         offset: usize,
         message: String,
     },
-    ParseError(String),
+    ParseError(String, Token),
+    InvalidArgumentTarget(String),
     GeneralError(String),
 }
 
 impl RuntimeError {
-    pub(crate) fn parse_error(message: String) -> Self {
-        Self::ParseError(message)
-    }
-
-    pub(crate) fn scan_error(message: String, line: usize, offset: usize) -> Self {
+    pub(crate) fn scan_error(message: String, line: usize, column: usize, offset: usize) -> Self {
         Self::ScanError {
-            message,
             line,
+            column,
             offset,
+            message,
         }
     }
 
@@ -57,6 +59,7 @@ impl From<Error> for RuntimeError {
     fn from(value: Error) -> Self {
         RuntimeError::ScanError {
             line: value.line,
+            column: value.column,
             offset: value.offset,
             message: value.message,
         }

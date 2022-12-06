@@ -15,8 +15,7 @@ impl Lox {
     }
 
     fn run(&self, source: String) -> Result<()> {
-        let scanner = Scanner::new(source);
-        let tokens = scanner.scan_tokens()?;
+        let tokens = Scanner::new(source).scan_tokens()?;
         println!("{tokens:#?}");
 
         Ok(())

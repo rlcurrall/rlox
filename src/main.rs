@@ -3,6 +3,7 @@ use lox::Lox;
 
 mod error;
 mod lox;
+mod parser;
 mod scanner;
 mod token;
 
@@ -34,13 +35,18 @@ fn handle_error(error: RuntimeError) -> i32 {
         }
         RuntimeError::ScanError {
             line,
+            column,
             offset: _,
             message,
         } => {
-            eprintln!("line {line} | Error: {message}");
+            eprintln!("line {line}:{column} | Error: {message}");
             2
         }
-        RuntimeError::ParseError(parse_err) => {
+        RuntimeError::ParseError(parse_err, _token) => {
+            eprintln!("{parse_err}");
+            3
+        }
+        RuntimeError::InvalidArgumentTarget(parse_err) => {
             eprintln!("{parse_err}");
             3
         }

@@ -1,5 +1,14 @@
 var message = "Hello World!";
-var num = 1234;
+var num = 1_234.25;
 
 // print out something
 print message;
+
+class Foo {
+    sayHello() {
+        print "Hello.";
+    }
+}
+
+var foo = Foo();
+foo.sayHello();
