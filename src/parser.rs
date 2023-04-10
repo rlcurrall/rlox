@@ -113,7 +113,7 @@ impl Parser {
         }
     }
 
-    pub(crate) fn parse(&mut self) -> Result<Vec<()>> {
+    pub(crate) fn parse(&mut self) -> Result<Vec<Stmt>> {
         let mut statements = vec![];
         let mut errors = vec![];
 
@@ -201,7 +201,7 @@ impl Parser {
         }
     }
 
-    fn declaration(&mut self) -> Result<()> {
+    fn declaration(&mut self) -> Result<Stmt> {
         self.advance();
         let token = self.current();
 
@@ -213,22 +213,36 @@ impl Parser {
         }
     }
 
-    fn statement(&mut self) -> Result<()> {
+    fn statement(&mut self) -> Result<Stmt> {
         match self.current().value {
             TokenValue::For => todo!(),
             TokenValue::If => todo!(),
             TokenValue::Print => todo!(),
             TokenValue::Return => todo!(),
             TokenValue::While => todo!(),
-            TokenValue::LeftBrace => todo!(),
+            TokenValue::LeftBrace => self.block(),
             _ => self.expression_statement(),
         }
     }
 
-    fn expression_statement(&mut self) -> Result<()> {
-        let _expr = self.expression()?;
-        // consume semicolon
-        Ok(())
+    // fn while_s
+
+    fn block(&mut self) -> Result<Stmt> {
+        let mut statements = vec![];
+
+        while !self.is_match(&[TokenValue::RightBrace]) {
+            statements.push(self.declaration()?);
+        }
+
+        self.consume(TokenValue::RightBrace, "Expected `}` after block")?;
+
+        Ok(Stmt::Block(statements))
+    }
+
+    fn expression_statement(&mut self) -> Result<Stmt> {
+        let expr = self.expression()?;
+        self.consume(TokenValue::Semicolon, "Expected `;` after expression")?;
+        Ok(Stmt::Expression(expr))
     }
 
     fn expression(&mut self) -> Result<Expr> {
@@ -445,8 +459,13 @@ impl Parser {
     }
 }
 
+pub enum Stmt {
+    Expression(Expr),
+    Block(Vec<Stmt>),
+}
+
 #[derive(Clone, Debug)]
-enum Expr {
+pub enum Expr {
     Literal(Literal),
     This {
         keyword: Token,
@@ -502,7 +521,7 @@ enum Expr {
 }
 
 #[derive(Clone, Debug)]
-enum Literal {
+pub enum Literal {
     False,
     True,
     Nil,
